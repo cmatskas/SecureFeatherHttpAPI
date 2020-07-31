@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -39,6 +38,8 @@ namespace SecureFeatherHttpApi
 
         static async Task CreateTodo(HttpContext http)
         {
+            http.VerifyUserHasAnyAcceptedScope(new string[] {"access_as_user"});
+
             var todo = await http.Request.ReadJsonAsync<TodoItem>();
             todoItemCollection.Add(todo);
             http.Response.StatusCode = 204;
