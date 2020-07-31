@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ namespace SecureFeatherHttpApi
 {
     class Program
     { 
+        private static ConcurrentBag<TodoItem> todoItemCollection;
         static async Task Main(string[] args)
         {
             var builder = Microsoft.AspNetCore.Builder.WebApplication.CreateBuilder(args);
@@ -30,12 +32,15 @@ namespace SecureFeatherHttpApi
             app.MapPost("api/todos", CreateTodo).RequireAuthorization();
             app.MapGet("/api/me", GetGraphData).RequireAuthorization();
 
+            todoItemCollection = new ConcurrentBag<TodoItem>();
+
             await app.RunAsync();
         }
 
         static async Task CreateTodo(HttpContext http)
         {
             var todo = await http.Request.ReadJsonAsync<TodoItem>();
+            todoItemCollection.Add(todo);
             http.Response.StatusCode = 204;
         }
 
@@ -43,12 +48,13 @@ namespace SecureFeatherHttpApi
         {
             http.VerifyUserHasAnyAcceptedScope(new string[] {"access_as_user"});
 
-            var todos = new List<TodoItem> 
+            if(todoItemCollection.Count == 0)
             {
-                new TodoItem{Id = 1, Name = "test", IsComplete = false}, 
-                new TodoItem{Id=2, Name="hello", IsComplete=true}
-            };
-            await http.Response.WriteJsonAsync(todos);
+                todoItemCollection.Add( new TodoItem{Id = 1, Name = "test", IsComplete = false});
+                todoItemCollection.Add(new TodoItem{Id=2, Name="hello", IsComplete=true});
+            }
+
+            await http.Response.WriteJsonAsync(todoItemCollection);
         }
 
         static async Task GetGraphData(HttpContext http)
