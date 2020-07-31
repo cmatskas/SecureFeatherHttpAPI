@@ -14,6 +14,7 @@ namespace SecureFeatherHttpApi
     class Program
     { 
         private static ConcurrentBag<TodoItem> todoItemCollection;
+        private static string[] scopes = new string[] {"user.read"};
         static async Task Main(string[] args)
         {
             var builder = Microsoft.AspNetCore.Builder.WebApplication.CreateBuilder(args);
@@ -38,7 +39,7 @@ namespace SecureFeatherHttpApi
 
         static async Task CreateTodo(HttpContext http)
         {
-            http.VerifyUserHasAnyAcceptedScope(new string[] {"access_as_user"});
+            http.VerifyUserHasAnyAcceptedScope(scopes);
 
             var todo = await http.Request.ReadJsonAsync<TodoItem>();
             todoItemCollection.Add(todo);
@@ -47,7 +48,7 @@ namespace SecureFeatherHttpApi
 
         static async Task GetTodos(HttpContext http)
         {
-            http.VerifyUserHasAnyAcceptedScope(new string[] {"access_as_user"});
+            http.VerifyUserHasAnyAcceptedScope(scopes);
 
             if(todoItemCollection.Count == 0)
             {
@@ -60,7 +61,7 @@ namespace SecureFeatherHttpApi
 
         static async Task GetGraphData(HttpContext http)
         {
-            http.VerifyUserHasAnyAcceptedScope(new string[]{"access_as_user"});
+            http.VerifyUserHasAnyAcceptedScope(scopes);
 
             var tokenAcquisition = http.RequestServices.GetRequiredService<ITokenAcquisition>();
 
